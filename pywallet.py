@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 #-*- coding: utf-8 -*-
 from __future__ import print_function
 pywversion="2.2"
@@ -77,6 +77,9 @@ from subprocess import *
 import os
 import os.path
 import platform
+
+# assert that this hash function is available:
+# hashlib.new('ripemd160')
 
 def ordsix(x):
 	if x.__class__ == int:return x
@@ -1877,9 +1880,11 @@ def recov(device, passes, size=102400, inc=10240, outputdir='.'):
 			print("Private keys not decrypted: %d"%len(ckeys_not_decrypted))
 			print("Try another password, check the size of your partition or seek help")
 
-
+	print("== right before uncrypted_ckeys=filter(...)")
 	uncrypted_ckeys=filter(lambda x:x!=None, map(lambda x:x[1].privkey, ckeys))
+	print("== done uncrypted_ckeys=filter(...)")
 	uckeys.extend(uncrypted_ckeys)
+	print("== done uckeys.extend ... returning from recov(...)")
 
 	return uckeys
 
@@ -4032,16 +4037,45 @@ if __name__ == '__main__':
 
 		print("\nStarting recovery.")
 		recoveredKeys=recov(device, passes, size, 10240, options.recov_outputdir)
+		print("== Returned from recov")
 		recoveredKeys=list(set(recoveredKeys))
+		print("== Removed duplicates in recoveredKeys. Len: " + str(len(recoveredKeys)))
 #		print(recoveredKeys[0:5])
 
+		print("== recoveredKeys:")
+		print(str(recoveredKeys))
 
+		def convert_byte_strings_to_hex(byte_strings):
+			hex_strings = []
+			for byte_string in byte_strings:
+				# Convert each byte string to a hex string
+				hex_string = binascii.hexlify(byte_string)
+				hex_strings.append(hex_string)
+			return hex_strings
+
+		recovered_keys_as_hex = convert_byte_strings_to_hex(recoveredKeys)
+		print("==== recovered_keys_as_hex ==== ")
+		print(recovered_keys_as_hex)
+		print("==== end_recovered_keys_as_hex ==== ")
+
+		f_my_json = open("OUTPUT_recovered_keys_" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + '.json', 'w')
+		json.dump(recovered_keys_as_hex, f_my_json)
+		f_my_json.close()
+
+		print("== starting create_wallet")
 		db_env = create_env(options.recov_outputdir)
+		print("== done create_wallet")
 		recov_wallet_name = "recovered_wallet_%s.dat"%ts()
 
+		print("== starting create_new_wallet")
 		create_new_wallet(db_env, recov_wallet_name, 32500)
+		print("== done create_new_wallet")
 
-		if passphraseRecov!="I don't want to put a password on the recovered wallet and I know what can be the consequences.":
+		if passphraseRecov in ["I don't want to put a password on the recovered wallet and I know what can be the consequences.", "none"]:
+			print("== Not using a passphrase.")
+
+		else:
+			print("== Using a passphrase")
 			db = open_wallet(db_env, recov_wallet_name, True)
 
 			NPP_salt=os.urandom(8)
@@ -4060,9 +4094,16 @@ if __name__ == '__main__':
 			})
 			db.close()
 
+		print("== past the wallet passphrase part")
+
 		read_wallet(json_db, db_env, recov_wallet_name, True, True, "", False)
 
+
+		print("== done read_wallet")
+
 		db = open_wallet(db_env, recov_wallet_name, True)
+
+		print("== done open_wallet")
 
 		print("\n\nImporting:")
 		for i,sec in enumerate(recoveredKeys):
