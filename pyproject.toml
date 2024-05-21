@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "recranger-pywallet"
+name = "pywallet"
 version = "0.0.1"
 authors = [{ name = "RecRanger", email = "RecRanger+package@proton.me" }]
 description = "pywallet"

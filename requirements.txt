@@ -1,0 +1,6 @@
+bsddb3>=*
+pycryptodome>=*
+ecdsa>=*
+
+# dev tools
+pytest>=*
