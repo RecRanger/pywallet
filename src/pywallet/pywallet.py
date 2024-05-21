@@ -1,11 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-from __future__ import print_function
-
-pywversion = "2.2"
-never_update = False
-
-# RecRanger's pywallet.py
+# RecRanger's pywallet
 # Forked from:
 #
 # jackjack's pywallet.py
@@ -14,54 +7,30 @@ never_update = False
 #
 
 
-import sys
-
-PY3 = sys.version_info.major > 2
-
 import warnings
 
 
-def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
-    return "%s:%s: %s: %s\n" % (filename, lineno, category.__name__, message)
-
-
-warnings.formatwarning = warning_on_one_line
-if PY3:
-    warnings.warn("Python 3 support is still experimental, you may encounter bugs")
-    import _thread as thread
-    import functools
-
-    raw_input = input
-    xrange = range
-    long = int
-    unicode = str
-    reduce = functools.reduce
-else:
-    import thread
+import _thread as thread
+from functools import reduce
 
 missing_dep = []
 
-try:
-    from bsddb.db import *
-except:
-    try:
-        from bsddb3.db import *
-    except:
-        missing_dep.append("bsddb")
+# from bsddb.db import *
+from bsddb3.db import *  # FIXME: explicitly specify imports
 
-import os, sys, time, re
+
+import os
+import sys
+import time
+import re
 
 pyw_filename = os.path.basename(__file__)
 pyw_path = os.path.dirname(os.path.realpath(__file__))
 
-try:
-    import simplejson as json
-except:
-    import json
-
+import json
 import bisect
 import itertools
-import unicodedata
+import strdata
 import hmac
 import getpass
 import logging
@@ -82,11 +51,15 @@ from types import MethodType
 import unittest
 
 from datetime import datetime
-from subprocess import *
+from subprocess import * # FIXME: explicitly specify imports
 
 import os
-import os.path
 import platform
+
+
+from math import log
+from operator import xor
+from copy import deepcopy
 
 
 def ordsix(x):
@@ -96,7 +69,7 @@ def ordsix(x):
 
 
 def chrsix(x):
-    if not (x.__class__ in [int, long]):
+    if not (x.__class__ in [int, int]):
         return x
     if PY3:
         return bytes([x])
@@ -112,7 +85,7 @@ def str_to_bytes(k):
 def bytes_to_str(k):
     if k.__class__ == bytes:
         return k.decode()
-    if k.__class__ == unicode:
+    if k.__class__ == str:
         return bytes_to_str(k.encode())
     return k
 
@@ -123,7 +96,7 @@ class Bdict(dict):
         for k, v in self.copy().items():
             try:
                 del self[k]
-            except:
+            except KeyError:
                 pass
             self[bytes_to_str(k)] = v
 
@@ -292,9 +265,6 @@ def determine_db_name():
 ########################
 ########################
 
-from math import log
-from operator import xor
-from copy import deepcopy
 
 RoundConstants = [
     1,
@@ -383,7 +353,7 @@ def keccak_f(state):
 
     l = int(log(state.lanew, 2))
     nr = 12 + 2 * l
-    for ir in xrange(nr):
+    for ir in range(nr):
         round(state.s, RoundConstants[ir])
 
 
@@ -1895,7 +1865,7 @@ class Crypter_pycrypto(object):
         if nDerivationMethod != 0:
             return 0
         data = str_to_bytes(vKeyData) + vSalt
-        for i in xrange(nDerivIterations):
+        for i in range(nDerivIterations):
             data = hashlib.sha512(data).digest()
         self.SetKey(data[0:32])
         self.SetIV(data[32 : 32 + 16])
@@ -1984,7 +1954,7 @@ class Crypter_pure(object):
         if nDerivationMethod != 0:
             return 0
         data = str_to_bytes(vKeyData) + vSalt
-        for i in xrange(nDerivIterations):
+        for i in range(nDerivIterations):
             data = hashlib.sha512(data).digest()
         self.SetKey(data[0:32])
         self.SetIV(data[32 : 32 + 16])
@@ -2359,7 +2329,7 @@ def i2d_ECPrivateKey(pkey, compressed=False):  # , crypted=True):
 
 
 def i2o_ECPublicKey(pkey, compressed=False):
-    # public keys are 65 bytes long (520 bits)
+    # public keys are 65 bytes int (520 bits)
     # 0x04 + 32-byte X-coordinate + 32-byte Y-coordinate
     # 0x00 = point at infinity, 0x02 and 0x03 = compressed, 0x04 = uncompressed
     # compressed keys: <sign> <x> where <sign> is 0x02 if y is even and 0x03 if y is odd
@@ -2411,16 +2381,16 @@ def b58encode(v, __b58chars=__b58chars):
     """encode v, which is a string of bytes, to base58."""
     __b58base = len(__b58chars)
 
-    long_value = 0
+    int_value = 0
     for i, c in enumerate(v[::-1]):
-        long_value += (256**i) * ordsix(c)
+        int_value += (256**i) * ordsix(c)
 
     result = ""
-    while long_value >= __b58base:
-        div, mod = divmod(long_value, __b58base)
+    while int_value >= __b58base:
+        div, mod = divmod(int_value, __b58base)
         result = __b58chars[mod] + result
-        long_value = div
-    result = __b58chars[long_value] + result
+        int_value = div
+    result = __b58chars[int_value] + result
 
     # Bitcoin does a little leading-zero-compression:
     # leading 0-bytes in the input become leading-1s
@@ -2437,16 +2407,16 @@ def b58encode(v, __b58chars=__b58chars):
 def b58decode(v, length, __b58chars=__b58chars):
     """decode v into a string of len bytes"""
     __b58base = len(__b58chars)
-    long_value = 0
+    int_value = 0
     for i, c in enumerate(v[::-1]):
-        long_value += __b58chars.find(c) * (__b58base**i)
+        int_value += __b58chars.find(c) * (__b58base**i)
 
     result = b""
-    while long_value >= 256:
-        div, mod = divmod(long_value, 256)
+    while int_value >= 256:
+        div, mod = divmod(int_value, 256)
         result = chrsix(mod) + result
-        long_value = div
-    result = chrsix(long_value) + result
+        int_value = div
+    result = chrsix(int_value) + result
 
     nPad = 0
     for c in v:
@@ -2488,7 +2458,7 @@ def DecodeBase58Check(sec, __b58chars=__b58chars):
         return secret
 
 
-def str_to_long(b):
+def str_to_int(b):
     res = 0
     pos = 1
     for a in reversed(b):
@@ -2591,7 +2561,7 @@ def deserialize_CAddress(d):
 def parse_BlockLocator(vds):
     d = Bdict({"hashes": []})
     nHashes = vds.read_compact_size()
-    for i in xrange(nHashes):
+    for i in range(nHashes):
         d["hashes"].append(vds.read_bytes(32))
         return d
 
@@ -2955,9 +2925,9 @@ def recov(device, passes, size=102400, inc=10240, outputdir="."):
                     ),
                 )
             )
-            cont = raw_input("Do you want to test them? (y/n): ")
+            cont = input("Do you want to test them? (y/n): ")
             while len(cont) == 0:
-                cont = raw_input("Do you want to test them? (y/n): ")
+                cont = input("Do you want to test them? (y/n): ")
                 if cont[0] == "y":
                     refused_to_test_all_pps = False
                     cpt = 0
@@ -3451,11 +3421,11 @@ def parse_wallet(db, item_callback):
                 d["version"] = vds.read_int32()
                 n_vin = vds.read_compact_size()
                 d["txIn"] = []
-                for i in xrange(n_vin):
+                for i in range(n_vin):
                     d["txIn"].append(parse_TxIn(vds))
                 n_vout = vds.read_compact_size()
                 d["txOut"] = []
-                for i in xrange(n_vout):
+                for i in range(n_vout):
                     d["txOut"].append(parse_TxOut(vds))
                 d["lockTime"] = vds.read_uint32()
                 d["tx"] = binascii.hexlify(vds.input[start : vds.read_cursor])
@@ -4117,16 +4087,16 @@ def parse_private_key(sec, force_compressed=None):
             pass
     if not pkey:
         if len(sec) == 64:
-            pkey = EC_KEY(str_to_long(binascii.unhexlify(sec)))
+            pkey = EC_KEY(str_to_int(binascii.unhexlify(sec)))
             compressed = as_compressed(False)
         elif len(sec) == 66:
-            pkey = EC_KEY(str_to_long(binascii.unhexlify(sec[:-2])))
+            pkey = EC_KEY(str_to_int(binascii.unhexlify(sec[:-2])))
             compressed = as_compressed(True)
         else:
             warnings.warn(
-                "Hexadecimal private keys must be 64 or 66 characters long (specified one is "
+                "Hexadecimal private keys must be 64 or 66 characters int (specified one is "
                 + str(len(sec))
-                + " characters long)"
+                + " characters int)"
             )
             if len(sec) < 64:
                 compressed = as_compressed(False)
@@ -4136,7 +4106,7 @@ def parse_private_key(sec, force_compressed=None):
                 )
                 try:
                     pkey = EC_KEY(
-                        str_to_long(binascii.unhexlify("0" * (64 - len(sec)) + sec))
+                        str_to_int(binascii.unhexlify("0" * (64 - len(sec)) + sec))
                     )
                 except Exception as e:
                     warnings.warn(e)
@@ -4147,7 +4117,7 @@ def parse_private_key(sec, force_compressed=None):
                     "Keeping first 64 characters, %scompressed"
                     % ("un" if not compressed else "")
                 )
-                pkey = EC_KEY(str_to_long(binascii.unhexlify(sec[:64])))
+                pkey = EC_KEY(str_to_int(binascii.unhexlify(sec[:64])))
             else:
                 raise Exception("Error")
     return (pkey, compressed)
@@ -4968,7 +4938,7 @@ bip39_wordlist = """
  hollow home honey hood hope horn horror horse hospital host hotel hour hover hub huge human humble humor hundred hungry hunt hurdle hurry hurt husband hybrid ice icon idea identify idle ignore ill illegal illness image imitate immense immune impact impose improve impulse inch include income
  increase index indicate indoor industry infant inflict inform inhale inherit initial inject injury inmate inner innocent input inquiry insane insect inside inspire install intact interest into invest invite involve iron island isolate issue item ivory jacket jaguar jar jazz jealous jeans jelly
  jewel job join joke journey joy judge juice jump jungle junior junk just kangaroo keen keep ketchup key kick kid kidney kind kingdom kiss kit kitchen kite kitten kiwi knee knife knock know lab label labor ladder lady lake lamp language laptop large later latin laugh laundry lava law lawn lawsuit
- layer lazy leader leaf learn leave lecture left leg legal legend leisure lemon lend length lens leopard lesson letter level liar liberty library license life lift light like limb limit link lion liquid list little live lizard load loan lobster local lock logic lonely long loop lottery loud lounge
+ layer lazy leader leaf learn leave lecture left leg legal legend leisure lemon lend length lens leopard lesson letter level liar liberty library license life lift light like limb limit link lion liquid list little live lizard load loan lobster local lock logic lonely int loop lottery loud lounge
  love loyal lucky luggage lumber lunar lunch luxury lyrics machine mad magic magnet maid mail main major make mammal man manage mandate mango mansion manual maple marble march margin marine market marriage mask mass master match material math matrix matter maximum maze meadow mean measure meat
  mechanic medal media melody melt member memory mention menu mercy merge merit merry mesh message metal method middle midnight milk million mimic mind minimum minor minute miracle mirror misery miss mistake mix mixed mixture mobile model modify mom moment monitor monkey monster month moon moral
  more morning mosquito mother motion motor mountain mouse move movie much muffin mule multiply muscle museum mushroom music must mutual myself mystery myth naive name napkin narrow nasty nation nature near neck need negative neglect neither nephew nerve nest net network neutral never news next nice
@@ -5009,7 +4979,7 @@ class Mnemonic(object):
         self.wordlist = bip39_wordlist
         if len(self.wordlist) != self.radix:
             raise ValueError(
-                "Wordlist should contain {} words, but it's {} words long instead.".format(
+                "Wordlist should contain {} words, but it's {} words int instead.".format(
                     self.radix, len(self.wordlist)
                 )
             )
@@ -5022,7 +4992,7 @@ class Mnemonic(object):
             utxt = txt
         else:
             raise TypeError("String value expected")
-        return unicodedata.normalize("NFKD", utxt)
+        return strdata.normalize("NFKD", utxt)
 
     def generate(self, strength=128):
         if strength not in [128, 160, 192, 224, 256]:
@@ -5863,13 +5833,13 @@ if __name__ == "__main__":
         for pbk in encrypted_keys[::-1]:
             p2pkh, p2wpkh, witaddr, _ = pubkey_info(pbk["public_key"], network)
             for addr in [p2pkh, p2wpkh, witaddr]:
-                has_balance = raw_input(addr + ": ") != ""
+                has_balance = input(addr + ": ") != ""
                 if has_balance:
                     print("")
                     break
             if not has_balance:
                 if (
-                    raw_input(
+                    input(
                         "\nAre you REALLY sure the 3 addresses above have an empty balance? (type 'YES') "
                     )
                     == "YES"
