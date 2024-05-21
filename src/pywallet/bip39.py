@@ -11,7 +11,7 @@ import binascii
 from pywallet.addresses import EncodeBase58Check, DecodeBase58Check, b58encode, hash_160
 from pywallet.conversions import ordsix, bytes_to_str
 from pywallet.ecdsa import _r
-from pywallet.wallet_dat_reader import Xpriv, keyinfo
+from pywallet.wallet_dat_handler import keyinfo
 
 
 bip39_wordlist = """

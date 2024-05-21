@@ -1,11 +1,10 @@
 import binascii
 import base64
-
-from pywallet.conversions import chrsix, ordsix, DecodeBase58Check, EncodeBase58Check
-from pywallet.ecdsa import EC_KEY, i2d_ECPrivateKey, i2o_ECPublicKey
-from pywallet.networks import DEFAULT_NETWORK
 import hashlib
 
+from pywallet.conversions import chrsix, ordsix
+from pywallet.networks import DEFAULT_NETWORK
+from pywallet.openssl_pk import i2d_ECPrivateKey, i2o_ECPublicKey
 
 # bitcointools hashes and base58 implementation
 
@@ -144,15 +143,6 @@ def ASecretToSecret(sec, network=DEFAULT_NETWORK):
     if ordsix(vch[0]) != network.wif_prefix:
         print("Warning: adress prefix seems bad (%d vs %d)" % (ordsix(vch[0]), network.wif_prefix))
     return vch[1:]
-
-
-def regenerate_key(sec):
-    b = ASecretToSecret(sec)
-    if not b:
-        return False
-    b = b[0:32]
-    secret = int(b"0x" + binascii.hexlify(b), 16)
-    return EC_KEY(secret)
 
 
 def GetPubKey(pkey, compressed=False):

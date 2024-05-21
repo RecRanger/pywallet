@@ -1,7 +1,7 @@
 import binascii
 
 
-from pywallet.ecdsa import _Gx, _Gy, _p, _r
+from pywallet.ecdsa_constants import _Gx, _Gy, _p, _r
 
 # secp256k1
 # pywallet openssl private key implementation

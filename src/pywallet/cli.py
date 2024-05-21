@@ -21,6 +21,10 @@ from pywallet.wallet_dat_handler import (
     update_wallet,
     delete_from_wallet,
     BCDataStream,
+    clone_wallet,
+    read_wallet,
+    keyinfo,
+    importprivkey,
 )
 from pywallet.networks import (
     network_bitcoin,
@@ -28,13 +32,6 @@ from pywallet.networks import (
     network_ethereum,
     find_network,
     Network,
-)
-
-from pywallet.wallet_dat_reader import (
-    clone_wallet,
-    read_wallet,
-    keyinfo,
-    importprivkey,
 )
 from pywallet.extras import whitepaper
 

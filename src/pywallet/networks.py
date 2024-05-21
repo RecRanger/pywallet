@@ -1,10 +1,12 @@
 from collections import namedtuple
-from types import MethodType
+
+# from types import MethodType
 import binascii
 
 from pywallet.conversions import bytes_to_str
 from pywallet.keccak256 import Keccak256
-from pywallet.addresses import public_key_to_bc_address
+
+# from pywallet.addresses import public_key_to_bc_address
 
 aversions = {}
 for i in range(256):
@@ -48,14 +50,14 @@ class Network(namedtuple("Network", "name p2pkh_prefix p2sh_prefix wif_prefix se
         pass
 
 
-def ethereum_keyinfo(self, keyinfo, print_info=True):
-    ethpubkey = keyinfo.uncompressed_public_key[1:]
-    eth_hash = binascii.hexlify(Keccak256(ethpubkey).digest())[-40:]
-    eth_addr = "0x" + bytes_to_str(eth_hash)
-    if print_info and not keyinfo.compressed:
-        print("Ethereum address:    %s" % eip55(eth_addr))
-        print("Ethereum B58address: %s" % public_key_to_bc_address(eth_hash, 33))
-    return namedtuple("SubKeyInfo", "addr")(eth_addr)
+# def ethereum_keyinfo(self, keyinfo, print_info=True):
+#     ethpubkey = keyinfo.uncompressed_public_key[1:]
+#     eth_hash = binascii.hexlify(Keccak256(ethpubkey).digest())[-40:]
+#     eth_addr = "0x" + bytes_to_str(eth_hash)
+#     if print_info and not keyinfo.compressed:
+#         print("Ethereum address:    %s" % eip55(eth_addr))
+#         print("Ethereum B58address: %s" % public_key_to_bc_address(eth_hash, 33))
+#     return namedtuple("SubKeyInfo", "addr")(eth_addr)
 
 
 def find_network(name):
@@ -67,7 +69,7 @@ def find_network(name):
 
 network_bitcoin = Network("Bitcoin", 0, 5, 0x80, "bc")
 network_bitcoin_testnet3 = Network("Bitcoin-Testnet3", 0x6F, 0xC4, 0xEF, "tb")
-network_ethereum = Network("Ethereum", 0, 5, 0x80, "eth")
-network_ethereum.keyinfo = MethodType(ethereum_keyinfo, network_ethereum)
+# network_ethereum = Network("Ethereum", 0, 5, 0x80, "eth")
+# network_ethereum.keyinfo = MethodType(ethereum_keyinfo, network_ethereum)
 
 DEFAULT_NETWORK = network_bitcoin

@@ -8,7 +8,6 @@ import re
 import urllib
 import hashlib
 from datetime import datetime
-import collections
 
 from pywallet.wallet_crypter import crypter
 from pywallet.addresses import Hash

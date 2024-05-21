@@ -2,25 +2,13 @@ import random
 import binascii
 
 import ecdsa
-from ecdsa import der
 
 from pywallet.conversions import (
     bytes_to_int,
     ordsix,
-    bytes_to_str,
-    chrsix,
-    str_to_bytes,
-    int_to_bytes,
 )
-from pywallet.addresses import public_key_to_bc_address
-
-_p = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
-_r = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
-_b = 0x0000000000000000000000000000000000000000000000000000000000000007
-_a = 0x0000000000000000000000000000000000000000000000000000000000000000
-_Gx = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798
-_Gy = 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8
-
+from pywallet.addresses import public_key_to_bc_address, ASecretToSecret
+from pywallet.ecdsa_constants import _Gx, _Gy, _p, _a, _b, _r
 
 curve_secp256k1 = ecdsa.ellipticcurve.CurveFp(_p, _a, _b)
 generator_secp256k1 = g = ecdsa.ellipticcurve.Point(curve_secp256k1, _Gx, _Gy, _r)
@@ -279,3 +267,12 @@ class EC_KEY(object):
 
 
 # end of python-ecdsa code
+
+
+def regenerate_key(sec):
+    b = ASecretToSecret(sec)
+    if not b:
+        return False
+    b = b[0:32]
+    secret = int(b"0x" + binascii.hexlify(b), 16)
+    return EC_KEY(secret)
