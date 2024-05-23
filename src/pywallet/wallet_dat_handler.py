@@ -8,16 +8,11 @@ import struct
 import logging
 import sys
 import binascii
-
-import binascii
 import json
-import sys
 import time
 import warnings
 import logging
 import collections
-import random
-import os
 
 
 import ecdsa
